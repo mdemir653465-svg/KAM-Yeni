@@ -13,21 +13,28 @@ jobs:
 
     steps:
       - name: Projeyi indir
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Java 17 kur
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: '17'
 
-      - name: Gradle ile APK oluştur
-        uses: gradle/actions/setup-gradle@v4
+      - name: Gradle kurulumu
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Ana klasörü kontrol et
+        run: |
+          echo "Ana proje klasörü:"
+          pwd
+          ls -la
 
       - name: APK derle
-        run: chmod +x gradlew && ./gradlew assembleDebug
+        working-directory: ${{ github.workspace }}
+        run: ./gradlew --no-daemon -p "$GITHUB_WORKSPACE" :app:assembleDebug
 
-      - name: APK dosyasını yükle
+      - name: APK yükle
         uses: actions/upload-artifact@v4
         with:
           name: KAM-APK
