@@ -1,3 +1,7 @@
+
 <resources>
     <string name="app_name">KAM</string>
+    <string name="welcome_message">Merhaba! Ben KAM.</string>
+    <string name="click_me">Tıkla</string>
+    <string name="initial_count">0</string>
 </resources>
