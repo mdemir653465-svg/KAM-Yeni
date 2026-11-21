@@ -1,9 +1,6 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.SampleApp" parent="Theme.Material3.DayNight">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<resources>
+    <style name="Base.Theme.KAM" parent="Theme.Material3.DayNight">
     </style>
 
-    <style name="Theme.SampleApp" parent="Base.Theme.SampleApp" />
+    <style name="Theme.KAM" parent="Base.Theme.KAM" />
 </resources>
