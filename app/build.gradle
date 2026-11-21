@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    namespace 'com.example.sampleapp'
+    namespace 'com.bedrettin.kam'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.sampleapp"
-        minSdk 21
+        applicationId "com.bedrettin.kam"
+        minSdk 
         targetSdk 34
         versionCode 1
         versionName "1.0"
