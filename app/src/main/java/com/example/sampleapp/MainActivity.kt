@@ -1,5 +1,5 @@
 
-package com.example.sampleapp
+package com.bedrettin.kam
 
 import android.app.Activity
 import android.os.Bundle
