@@ -14,6 +14,10 @@ import android.speech.RecognitionListener
 import android.speech.tts.TextToSpeech
 import android.Manifest
 import java.util.Locale
+import java.net.URL
+import java.net.HttpURLConnection
+import java.util.concurrent.Executors
+import org.json.JSONObject
 
 class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
@@ -22,6 +26,11 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var tts: TextToSpeech
     private var recognizer: SpeechRecognizer? = null
     private val izinKodu = 100
+
+    private val sunucuAdresi =
+        "https://soft-unit-304b.mdemir653465.workers.dev"
+
+    private val ag = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,8 +75,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         gonder.setOnClickListener {
             val yazi = mesaj.text.toString().trim()
             if (yazi.isNotEmpty()) {
-                cevapVer("Mesajını aldım: $yazi")
                 mesaj.text.clear()
+                kam'aSor(yazi)
             }
         }
 
@@ -93,9 +102,81 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
+    private fun kam'aSor(yazi: String) {
+        durum.text = "KAM düşünüyor..."
+
+        ag.execute {
+            var baglanti: HttpURLConnection? = null
+
+            try {
+                baglanti = (URL(sunucuAdresi).openConnection()
+                        as HttpURLConnection)
+
+                baglanti.requestMethod = "POST"
+                baglanti.connectTimeout = 20000
+                baglanti.readTimeout = 60000
+                baglanti.doOutput = true
+                baglanti.setRequestProperty(
+                    "Content-Type", "application/json"
+                )
+
+                val veri = JSONObject()
+                veri.put("message", yazi)
+
+                baglanti.outputStream.use {
+                    it.write(veri.toString().toByteArray(Charsets.UTF_8))
+                }
+
+                val kod = baglanti.responseCode
+                val akis = if (kod in 200..299) {
+                    baglanti.inputStream
+                } else {
+                    baglanti.errorStream
+                }
+
+                val sonuc = akis.bufferedReader().use {
+                    it.readText()
+                }
+
+                val cevap = JSONObject(sonuc)
+
+                if (kod in 200..299) {
+                    val yanit = cevap.optString("reply")
+
+                    runOnUiThread {
+                        if (yanit.isNotBlank()) {
+                            cevapVer(yanit)
+                        } else {
+                            cevapVer("Bir cevap alamadım.")
+                        }
+                    }
+                } else {
+                    runOnUiThread {
+                        cevapVer(
+                            "Sunucu hatası: " +
+                            cevap.optString("error", "Bağlantı başarısız.")
+                        )
+                    }
+                }
+
+            } catch (e: Exception) {
+                runOnUiThread {
+                    cevapVer("KAM sunucuya bağlanamadı. İnternet bağlantını kontrol et.")
+                }
+            } finally {
+                baglanti?.disconnect()
+            }
+        }
+    }
+
     private fun cevapVer(yazi: String) {
         durum.text = yazi
-        tts.speak(yazi, TextToSpeech.QUEUE_FLUSH, null, "KAM_CEVAP")
+        tts.speak(
+            yazi,
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "KAM_CEVAP"
+        )
     }
 
     private fun mikrofonuBaslat() {
@@ -117,6 +198,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         recognizer = SpeechRecognizer.createSpeechRecognizer(this)
 
         recognizer?.setRecognitionListener(object : RecognitionListener {
+
             override fun onReadyForSpeech(params: Bundle?) {
                 durum.text = "Seni dinliyorum..."
             }
@@ -124,6 +206,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             override fun onBeginningOfSpeech() {}
             override fun onRmsChanged(rmsdB: Float) {}
             override fun onBufferReceived(buffer: ByteArray?) {}
+
             override fun onEndOfSpeech() {
                 durum.text = "Söylediklerini anlıyorum..."
             }
@@ -136,11 +219,12 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 val liste = results?.getStringArrayList(
                     SpeechRecognizer.RESULTS_RECOGNITION
                 )
+
                 val sozcuk = liste?.firstOrNull()
 
                 if (!sozcuk.isNullOrBlank()) {
                     mesaj.setText(sozcuk)
-                    cevapVer("Söylediğini duydum: $sozcuk")
+                    kam'aSor(sozcuk)
                 }
             }
 
@@ -149,12 +233,19 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         })
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+
         intent.putExtra(
             RecognizerIntent.EXTRA_LANGUAGE_MODEL,
             RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
         )
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "tr-TR")
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "tr-TR")
+
+        intent.putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE, "tr-TR"
+        )
+
+        intent.putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "tr-TR"
+        )
 
         recognizer?.startListening(intent)
     }
@@ -164,7 +255,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        super.onRequestPermissionsResult(
+            requestCode, permissions, grantResults
+        )
 
         if (requestCode == izinKodu &&
             grantResults.isNotEmpty() &&
@@ -179,6 +272,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         recognizer?.destroy()
         tts.stop()
         tts.shutdown()
+        ag.shutdownNow()
         super.onDestroy()
     }
 }
