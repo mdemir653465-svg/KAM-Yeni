@@ -76,7 +76,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             val yazi = mesaj.text.toString().trim()
             if (yazi.isNotEmpty()) {
                 mesaj.text.clear()
-                kam'aSor(yazi)
+                kamSor(yazi)
             }
         }
 
