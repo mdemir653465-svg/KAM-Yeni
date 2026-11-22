@@ -102,7 +102,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
-    private fun kam'aSor(yazi: String) {
+    private fun kamSor(yazi: String) {
         durum.text = "KAM düşünüyor..."
 
         ag.execute {
