@@ -224,7 +224,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
                 if (!sozcuk.isNullOrBlank()) {
                     mesaj.setText(sozcuk)
-                    kam'aSor(sozcuk)
+                    kamSor(sozcuk)
                 }
             }
 
